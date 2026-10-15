@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { config, ensureDirs } from './config.js';
 import { openDb, closeDb } from './db.js';
 import { log } from './util/log.js';
@@ -64,34 +65,41 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'internal_error', message: config.isDev ? err.message : 'Lỗi máy chủ nội bộ' });
 });
 
-const server = app.listen(config.port, config.host, () => {
-  log.info(`clab listening on http://${config.host}:${config.port} (env=${config.nodeEnv})`);
-});
-
-// background maintenance
-refreshToolStatuses()
-  .then((m) => log.info('tool detection done:', Object.values(m).filter((t) => t.status === 'available').length + ' available'))
-  .catch((e) => log.warn('tool detection failed', e.message));
-
-recoverInterruptedScans();
-
-const sessionSweep = setInterval(() => {
-  try { purgeExpiredSessions(); } catch { /* ignore */ }
-}, 10 * 60_000);
-sessionSweep.unref?.();
-
-function shutdown(sig) {
-  log.info(sig + ' received — shutting down');
-  clearInterval(sessionSweep);
-  server.close(() => {
-    closeDb();
-    process.exit(0);
+/** Boot side-effects (listen + background jobs). Skipped when imported by tests. */
+export function boot() {
+  const server = app.listen(config.port, config.host, () => {
+    log.info(`clab listening on http://${config.host}:${config.port} (env=${config.nodeEnv})`);
   });
-  setTimeout(() => process.exit(0), 5000).unref?.();
+
+  // background maintenance
+  refreshToolStatuses()
+    .then((m) => log.info('tool detection done:', Object.values(m).filter((t) => t.status === 'available').length + ' available'))
+    .catch((e) => log.warn('tool detection failed', e.message));
+
+  recoverInterruptedScans();
+
+  const sessionSweep = setInterval(() => {
+    try { purgeExpiredSessions(); } catch { /* ignore */ }
+  }, 10 * 60_000);
+  sessionSweep.unref?.();
+
+  function shutdown(sig) {
+    log.info(sig + ' received — shutting down');
+    clearInterval(sessionSweep);
+    server.close(() => {
+      closeDb();
+      process.exit(0);
+    });
+    setTimeout(() => process.exit(0), 5000).unref?.();
+  }
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('uncaughtException', (e) => log.error('uncaughtException', e.message));
+  process.on('unhandledRejection', (e) => log.error('unhandledRejection', String(e && e.message)));
+  return server;
 }
-process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('uncaughtException', (e) => log.error('uncaughtException', e.message));
-process.on('unhandledRejection', (e) => log.error('unhandledRejection', String(e && e.message)));
+
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isDirectRun) boot();
 
 export default app;

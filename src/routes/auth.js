@@ -44,6 +44,10 @@ r.post('/login', (req, res) => {
   res.json({ ok: true, csrfToken: csrf });
 });
 
+r.get('/me', (req, res) => {
+  res.json({ authenticated: !!req.session, csrfToken: req.session?.csrf || null });
+});
+
 r.post('/logout', (req, res) => {
   if (req.session) destroySession(req.session.id);
   clearSessionCookie(res);

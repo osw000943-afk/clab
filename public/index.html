@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>clab — WhiteHat Lab</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231E40AF'/><path d='M9 16.5l4.5 4.5L23 11.5' stroke='white' stroke-width='3.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+</head>
+<body>
+  <!-- ===== LOGIN VIEW ===== -->
+  <div id="login-view" class="login-wrap hidden" aria-live="polite">
+    <div class="login-card" role="form" aria-labelledby="login-title">
+      <div class="login-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="34" height="34"><rect width="32" height="32" rx="7" fill="#1E40AF"/><path d="M9 16.5l4.5 4.5L23 11.5" stroke="white" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>clab <em>WhiteHat Lab</em></span>
+      </div>
+      <h1 id="login-title" data-i18n="login.title">Đăng nhập chủ Lab</h1>
+      <p class="muted" data-i18n="login.subtitle">Nền tảng kiểm thử bảo mật — truy cập giới hạn cho chủ sở hữu.</p>
+      <form id="login-form" novalidate>
+        <label for="login-user" data-i18n="login.username">Tên đăng nhập</label>
+        <input id="login-user" name="username" value="owner" autocomplete="username" required>
+        <label for="login-pass" data-i18n="login.password">Mật khẩu</label>
+        <input id="login-pass" name="password" type="password" autocomplete="current-password" required>
+        <div id="login-error" class="form-error hidden" role="alert"></div>
+        <button type="submit" class="btn primary block" id="login-btn" data-i18n="login.submit">Đăng nhập</button>
+      </form>
+      <div id="login-unconfigured" class="notice hidden">
+        <strong data-i18n="login.notConfiguredTitle">Chưa thiết lập mật khẩu</strong>
+        <p data-i18n="login.notConfiguredBody">Dashboard bị khóa cho tới khi chủ Lab chạy <code>npm run set-password</code> trên máy chủ rồi khởi động lại clab.</p>
+      </div>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button class="lang-btn" data-lang="vi">VI</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== APP SHELL ===== -->
+  <div id="app-view" class="app hidden">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#1E40AF"/><path d="M9 16.5l4.5 4.5L23 11.5" stroke="white" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>clab</span>
+      </div>
+      <nav aria-label="Main">
+        <a href="#/dashboard" data-nav="dashboard"><span class="nav-ico">▦</span><span data-i18n="nav.dashboard">Tổng quan</span></a>
+        <a href="#/scans/new" data-nav="scans/new"><span class="nav-ico">◎</span><span data-i18n="nav.newScan">Tạo lượt quét</span></a>
+        <a href="#/scans" data-nav="scans"><span class="nav-ico">≡</span><span data-i18n="nav.history">Lịch sử quét</span></a>
+        <a href="#/findings" data-nav="findings"><span class="nav-ico">⚑</span><span data-i18n="nav.findings">Findings</span></a>
+        <a href="#/tools" data-nav="tools"><span class="nav-ico">⚙</span><span data-i18n="nav.tools">Công cụ</span></a>
+        <div class="nav-sep" data-i18n="nav.settingsGroup">Cấu hình</div>
+        <a href="#/settings/ai" data-nav="settings/ai"><span class="nav-ico">✦</span><span data-i18n="nav.ai">AI Provider</span></a>
+        <a href="#/settings/system" data-nav="settings/system"><span class="nav-ico">⛨</span><span data-i18n="nav.system">Hệ thống</span></a>
+        <a href="#/health" data-nav="health"><span class="nav-ico">♥</span><span data-i18n="nav.health">Sức khỏe server</span></a>
+      </nav>
+      <div class="sidebar-foot">
+        <div class="worker-dot" id="worker-dot" title="worker"><i></i><span data-i18n="worker.idle">Worker rảnh</span></div>
+        <button class="btn ghost small" id="logout-btn" data-i18n="nav.logout">Đăng xuất</button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn" id="menu-btn" aria-label="Menu" aria-expanded="false">☰</button>
+        <h2 id="page-title">Tổng quan</h2>
+        <div class="topbar-right">
+          <div class="lang-toggle inline" role="group" aria-label="Language">
+            <button class="lang-btn" data-lang="vi">VI</button>
+            <button class="lang-btn" data-lang="en">EN</button>
+          </div>
+          <span class="owner-chip" title="owner">◉ <span data-i18n="topbar.owner">Chủ Lab</span></span>
+        </div>
+      </header>
+      <main id="content" class="content" tabindex="-1"></main>
+    </div>
+  </div>
+
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+  <div id="modal-root"></div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

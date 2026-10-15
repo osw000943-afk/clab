@@ -100,7 +100,7 @@ function which(bin) {
   return null;
 }
 
-function probeBin(bin, args, timeoutMs = 5000) {
+function probeBin(bin, args, timeoutMs = 12000) {
   return new Promise((resolve) => {
     let out = '';
     let done = false;
@@ -153,14 +153,18 @@ export async function refreshToolStatuses() {
       const binPath = which(t.detect.bin);
       if (binPath) {
         const r = await probeBin(t.detect.bin, t.detect.args);
-        if (r.ok) {
+        const m = t.parseVersion ? (r.output || '').match(t.parseVersion) : null;
+        if (r.ok && (!t.parseVersion || m)) {
           status = 'available';
-          const m = t.parseVersion ? (r.output || '').match(t.parseVersion) : null;
           version = m ? m[1] : (prev.version || null);
           detail = `Found at ${binPath}`;
+        } else if (r.ok && t.parseVersion && !m) {
+          // binary exists but output doesn't match the expected tool (e.g. Python httpx CLI)
+          status = 'incompatible';
+          detail = `'${t.detect.bin}' tại ${binPath} không phản hồi đúng định dạng của công cụ này (không phải bản ProjectDiscovery?)`;
         } else {
           status = 'failed';
-          detail = `Binary at ${binPath} but probe failed: ${r.error}`;
+          detail = `Binary at ${binPath} but probe failed: ${r.error || ('exit ' + r.code)}`;
         }
       } else {
         status = 'missing';

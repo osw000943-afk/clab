@@ -19,33 +19,38 @@ export const allowPrivateTargets = ALLOW_PRIVATE;
 
 const BLOCKED_HOSTNAMES = new Set(['localhost', 'metadata.google.internal', 'instance-data']);
 
+/** Ranges that must NEVER be scan targets (loopback, link-local incl. cloud metadata). */
+const NEVER_SCAN = new Set(['127.0.0.0/8', '169.254.0.0/16', 'loopback', 'link-local']);
+
 function ipToBigInt(ip) {
   const p = ip.split('.').map(Number);
-  return ((p[0] << 24) >>> 0) + (p[1] << 16) + (p[2] << 8) + p[3];
+  // pure Number arithmetic (no bitwise) -> unsigned 32-bit compare-safe
+  return ((p[0] * 256 + p[1]) * 256 + p[2]) * 256 + p[3];
 }
 
+const w = (a, b, c, d) => ((a * 256 + b) * 256 + c) * 256 + d;
 const V4_BLOCKS = [
-  ['0.0.0.0/8', 0x00000000, 0xff000000],
-  ['10.0.0.0/8', 0x0a000000, 0xff000000],
-  ['100.64.0.0/10', 0x64400000, 0xffc00000],
-  ['127.0.0.0/8', 0x7f000000, 0xff000000],
-  ['169.254.0.0/16', 0xa9fe0000, 0xffff0000],
-  ['172.16.0.0/12', 0xac100000, 0xfff00000],
-  ['192.0.0.0/24', 0xc0000000, 0xffffff00],
-  ['192.0.2.0/24', 0xc0000200, 0xffffff00],
-  ['192.168.0.0/16', 0xc0a80000, 0xffff0000],
-  ['198.18.0.0/15', 0xc6120000, 0xfffe0000],
-  ['198.51.100.0/24', 0xc6336400, 0xffffff00],
-  ['203.0.113.0/24', 0xcb007100, 0xffffff00],
-  ['224.0.0.0/4', 0xe0000000, 0xf0000000],
-  ['240.0.0.0/4', 0xf0000000, 0xf0000000],
+  ['0.0.0.0/8', w(0,0,0,0), w(255,0,0,0)],
+  ['10.0.0.0/8', w(10,0,0,0), w(255,0,0,0)],
+  ['100.64.0.0/10', w(100,64,0,0), w(255,192,0,0)],
+  ['127.0.0.0/8', w(127,0,0,0), w(255,0,0,0)],
+  ['169.254.0.0/16', w(169,254,0,0), w(255,255,0,0)],
+  ['172.16.0.0/12', w(172,16,0,0), w(255,240,0,0)],
+  ['192.0.0.0/24', w(192,0,0,0), w(255,255,255,0)],
+  ['192.0.2.0/24', w(192,0,2,0), w(255,255,255,0)],
+  ['192.168.0.0/16', w(192,168,0,0), w(255,255,0,0)],
+  ['198.18.0.0/15', w(198,18,0,0), w(255,254,0,0)],
+  ['198.51.100.0/24', w(198,51,100,0), w(255,255,255,0)],
+  ['203.0.113.0/24', w(203,0,113,0), w(255,255,255,0)],
+  ['224.0.0.0/4', w(224,0,0,0), w(240,0,0,0)],
+  ['240.0.0.0/4', w(240,0,0,0), w(240,0,0,0)],
 ];
 
 export function classifyIp(ip) {
   if (net.isIPv4(ip)) {
-    const n = ipToBigInt(ip);
+    const n = ipToBigInt(ip) >>> 0;
     for (const [name, base, mask] of V4_BLOCKS) {
-      if ((n & mask) === base) return name;
+      if (((n & (mask >>> 0)) >>> 0) === (base >>> 0)) return name;
     }
     return 'public';
   }
@@ -109,6 +114,12 @@ export async function assertUrlAllowed(rawUrl, { allowHttp = true, allowHttps = 
     throw err('blocked_host', `Hostname bị chặn: ${host}`);
   }
   const { ips } = await resolveHost(host);
+  // SSRF hard denylist: loopback / link-local / metadata ALWAYS blocked,
+  // even in authorized-lab mode.
+  const hard = ips.find((ip) => NEVER_SCAN.has(classifyIp(ip)));
+  if (hard) {
+    throw err('blocked_ip', `Địa chỉ bị cấm tuyệt đối (${classifyIp(hard)}): ${hard} — không bao giờ được quét`);
+  }
   const bad = ALLOW_PRIVATE ? null : ips.find(isBlockedIp);
   if (bad) {
     throw err('blocked_ip', `Địa chỉ bị chặn (${classifyIp(bad)}): ${bad} — không được phép quét mạng nội bộ`);
@@ -125,6 +136,8 @@ export async function assertHostPortAllowed(hostRaw, port) {
   if (BLOCKED_HOSTNAMES.has(host.toLowerCase()) && !(ALLOW_PRIVATE && host.toLowerCase() === 'localhost')) throw err('blocked_host', `Hostname bị chặn: ${host}`);
   if (!net.isIP(host) && !/^[a-z0-9._-]+$/i.test(host)) throw err('invalid_host', 'Hostname không hợp lệ');
   const { ips } = await resolveHost(host);
+  const hard = ips.find((ip) => NEVER_SCAN.has(classifyIp(ip)));
+  if (hard) throw err('blocked_ip', `Địa chỉ bị cấm tuyệt đối (${classifyIp(hard)}): ${hard}`);
   const bad = ALLOW_PRIVATE ? null : ips.find(isBlockedIp);
   if (bad) throw err('blocked_ip', `Địa chỉ bị chặn (${classifyIp(bad)}): ${bad}`);
   return { host, port: p, ips };

@@ -147,10 +147,11 @@ CREATE TABLE IF NOT EXISTS test_accounts (
 );
 `;
 
-export function openDb() {
+export function openDb(dbPathOverride) {
   if (db) return db;
-  fs.mkdirSync(path.dirname(config.dbPath), { recursive: true });
-  db = new DatabaseSync(config.dbPath);
+  const p = dbPathOverride || config.dbPath;
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  db = new DatabaseSync(p);
   db.exec('PRAGMA journal_mode = WAL');
   db.exec('PRAGMA busy_timeout = 5000');
   db.exec('PRAGMA foreign_keys = ON');
