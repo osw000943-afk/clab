@@ -1,0 +1,23 @@
+{
+  "name": "clab",
+  "version": "1.0.0",
+  "description": "clab — WhiteHat Lab: security testing platform with real scanners, AI analysis, and strict scope safety",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "NODE_ENV=development node src/server.js",
+    "set-password": "node scripts/set-password.mjs",
+    "gen-key": "node scripts/gen-key.mjs",
+    "backup": "node scripts/backup.mjs",
+    "test": "node --test --test-concurrency=1 tests/"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mysql2": "^3.14.0",
+    "pg": "^8.16.0"
+  }
+}

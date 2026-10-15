@@ -1,0 +1,21 @@
+# secrets & local data
+.env
+data/
+*.db
+*.db-wal
+*.db-shm
+backups/
+
+# deps / logs
+node_modules/
+npm-debug.log*
+*.log
+logs/
+
+# tool working dirs
+.taste-skill/
+.tmp/
+tests/.tmp/
+
+# os
+.DS_Store
