@@ -13,7 +13,7 @@
     "set-password": "node scripts/set-password.mjs",
     "gen-key": "node scripts/gen-key.mjs",
     "backup": "node scripts/backup.mjs",
-    "test": "node --test --test-concurrency=1 tests/"
+    "test": "node --test --test-concurrency=1 tests/security.test.js tests/integration.test.js"
   },
   "dependencies": {
     "express": "^4.21.2",
