@@ -137,7 +137,10 @@ $('#login-form').addEventListener('submit', async (e) => {
     $('#login-pass').value = '';
     showApp();
   } catch (ex) {
-    err.textContent = ex.status === 429 ? t('login.locked') : (ex.code === 'password_not_configured' ? t('login.unconfigured') : t('login.failed'));
+    err.textContent = ex.status === 429 ? t('login.locked')
+      : ex.status === 503 ? t('login.unconfigured')
+      : ex.status === 401 ? t('login.failed')
+      : (t('common.error') + (ex.message || ex.code || ex.status));
     err.classList.remove('hidden');
   } finally {
     btn.disabled = false;

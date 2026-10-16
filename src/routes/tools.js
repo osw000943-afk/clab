@@ -23,10 +23,15 @@ r.post('/refresh', async (req, res) => {
   res.json({ ok: true, count: Object.keys(map).length });
 });
 
-r.post('/:id/enable', (req, res) => {
+r.post('/:id/enable', async (req, res) => {
   if (!getTool(req.params.id)) return res.status(404).json({ error: 'not_found' });
   setToolDisabled(req.params.id, false);
-  refreshToolStatuses().then(() => res.json({ ok: true }));
+  try {
+    await refreshToolStatuses();
+  } catch (e) {
+    return res.status(500).json({ error: 'refresh_failed', message: String(e.message).slice(0, 200) });
+  }
+  res.json({ ok: true });
 });
 
 r.post('/:id/disable', (req, res) => {

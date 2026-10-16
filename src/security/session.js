@@ -57,7 +57,7 @@ export function resolveSession(cookieValue) {
 export function setSessionCookie(res, token) {
   const secure = isHttpsRequest(res);
   res.append('Set-Cookie', [
-    `${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax${secure ? '; Secure' : ''} Max-Age=${config.sessionAbsoluteH * 3600}`,
+    `${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax${secure ? '; Secure' : ''}; Max-Age=${config.sessionAbsoluteH * 3600}`,
   ]);
 }
 

@@ -156,6 +156,10 @@ export function openDb(dbPathOverride) {
   db.exec('PRAGMA busy_timeout = 5000');
   db.exec('PRAGMA foreign_keys = ON');
   db.exec(SCHEMA);
+  for (const col of ['ai_status', 'ai_analysis']) {
+    const has = db.prepare("SELECT COUNT(*) AS n FROM pragma_table_info('findings') WHERE name = ?").get(col).n;
+    if (!has) db.exec('ALTER TABLE findings ADD COLUMN ' + col + (col === 'ai_status' ? " TEXT NOT NULL DEFAULT 'pending'" : ' TEXT'));
+  }
   return db;
 }
 
