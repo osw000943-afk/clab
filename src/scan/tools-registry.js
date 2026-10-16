@@ -6,7 +6,8 @@ import { nowMs } from '../util/ids.js';
 /**
  * Tool Registry — every scanner clab can drive.
  * Statuses come from REAL detection (binary probe / API key presence), never assumed:
- * available | missing | disabled | unsupported | needs-config.
+ * available | missing | disabled | needs-config | incompatible | failed | unsupported.
+ * Run states (tool_runs): running | completed | partial | failed | cancelled | unsupported.
  */
 
 export const TOOLS = [
@@ -21,7 +22,7 @@ export const TOOLS = [
     license: 'MIT', heavy: false, stages: ['s03'], desc: 'HTTP probing — built-in fallback when missing' },
   { id: 'whatweb', name: 'WhatWeb', category: 'fingerprint', mode: 'active',
     detect: { bin: 'whatweb', args: ['--version'] }, parseVersion: /WhatWeb version ([\d.]+)/i,
-    license: 'GPL-3.0', heavy: false, stages: ['s04'], desc: 'Technology fingerprinting' },
+    license: 'GPL-3.0', heavy: false, stages: ['s04','s29'], desc: 'Technology fingerprinting (shared adapter, registered once)' },
   { id: 'nikto', name: 'Nikto', category: 'misconfig', mode: 'active',
     detect: { bin: 'nikto', args: ['-Version'] }, parseVersion: /Nikto v([\d.]+)/i,
     license: 'GPL-2.0', heavy: true, stages: ['s08'], desc: 'Web server misconfig scan (request-capped)' },
@@ -70,6 +71,76 @@ export const TOOLS = [
   { id: 'safe-browsing', name: 'Google Safe Browsing API', category: 'reputation', mode: 'passive-external',
     apiCheck: 'safe-browsing', needsKeySetting: 'gsb_api_key',
     license: 'Google API terms', heavy: false, stages: ['s10'], desc: 'URL reputation — needs API key' },
+  { id: 'arachni', name: 'Arachni', category: 'dast', mode: 'active',
+    detect: { bin: 'arachni', args: ['--version'] }, parseVersion: /Arachni\s*v?([\d.]+)/i,
+    license: 'Apache-2.0 (upstream unmaintained, verify)', heavy: true, stages: ['s25'],
+    desc: 'Web app vuln assessment incl. supported XSS checks. Verify maintenance/compat first.' },
+  { id: 'w3af', name: 'w3af', category: 'dast', mode: 'active',
+    detect: { bin: 'w3af_console', args: ['--version'] }, parseVersion: /([\d.]+)/,
+    license: 'GPL-2.0 (project stalled, verify plugins)', heavy: true, stages: ['s25'],
+    desc: 'Web security framework. Verify version, project status and working plugins.' },
+  { id: 'dirsearch', name: 'Dirsearch', category: 'discovery', mode: 'active',
+    detect: { bin: 'dirsearch', args: ['--version'] }, parseVersion: /([\d.]+)/,
+    license: 'GPL-2.0', heavy: true, rateLimited: true, stages: ['s26'],
+    desc: 'Web path/resource discovery. Wordlist, rate limit and depth capped.' },
+  { id: 'gobuster', name: 'Gobuster', category: 'discovery', mode: 'active',
+    detect: { bin: 'gobuster', args: ['version'] }, parseVersion: /([\d.]+)/,
+    license: 'Apache-2.0', heavy: true, rateLimited: true, stages: ['s26'],
+    desc: 'Dir/file/subdomain discovery in approved scope. Threads and rate capped.' },
+  { id: 'nuclei', name: 'Nuclei', category: 'dast', mode: 'active',
+    detect: { bin: 'nuclei', args: ['-version'] }, parseVersion: /([\d.]+)/,
+    license: 'MIT', heavy: true, rateLimited: true, stages: ['s25'],
+    desc: 'Template-based scan. Template source/version/severity managed, in-scope only.' },
+  { id: 'feroxbuster', name: 'Feroxbuster', category: 'discovery', mode: 'active',
+    detect: { bin: 'feroxbuster', args: ['--version'] }, parseVersion: /([\d.]+)/,
+    license: 'MIT', heavy: true, rateLimited: true, stages: ['s26'],
+    desc: 'Web content discovery. Recursion, request count and time bounded.' },
+  { id: 'kallor', name: 'Kallor (unverified)', category: 'dast', mode: 'active',
+    unverified: true, license: 'unknown, verification required', heavy: false, stages: ['s25'],
+    desc: 'Name/repo/function NOT verified. Unsupported until verified, never faked.' },
+  { id: 'droopescan', name: 'Droopescan', category: 'cms', mode: 'active',
+    detect: { bin: 'droopescan', args: ['--help'] },
+    license: 'GPL-2.0', heavy: false, stages: ['s27'], desc: 'CMS scan for supported versions (Drupal, SilverStripe, Moodle).' },
+  { id: 'joomscan', name: 'JoomScan', category: 'cms', mode: 'active',
+    detect: { bin: 'joomscan', args: ['--version'] }, altBin: '/opt/joomscan/joomscan.pl',
+    license: 'GPL-2.0', heavy: false, stages: ['s27'], desc: 'Joomla assessment incl. vulnerable-version markers.' },
+  { id: 'a2sv', name: 'A2SV', category: 'tls', mode: 'active',
+    detect: { bin: 'a2sv', args: ['--version'] }, parseVersion: /([\d.]+)/,
+    license: 'GPL-2.0 (unmaintained, cross-check)', heavy: false, stages: ['s28'],
+    desc: 'TLS scan. Verify maintenance and real TLS coverage, cross-check modern tools.' },
+  { id: 'coraza', name: 'Coraza WAF', category: 'waf', mode: 'protect',
+    protectOnly: true, license: 'Apache-2.0', heavy: false, stages: ['s30'],
+    desc: 'WAF / reverse-proxy protection component, NOT a standalone scanner.' },
+  { id: 'bunkerweb', name: 'BunkerWeb', category: 'waf', mode: 'protect',
+    protectOnly: true, license: 'GPL-3.0', heavy: true, stages: ['s30'],
+    desc: 'Web gateway with WAF+TLS+abuse mitigation. Proxy changes only with approval+backup.' },
+  { id: 'wazuh', name: 'Wazuh', category: 'monitoring', mode: 'monitor',
+    monitorOnly: true, apiCheck: 'wazuh', needsKeySetting: 'wazuh_api',
+    license: 'GPL-2.0', heavy: true, stages: ['s30'],
+    desc: 'Monitoring/alerting/log analytics via API or agent. Prefer dedicated host (heavy for 1GB).' },
+  { id: 'ossec', name: 'OSSEC', category: 'monitoring', mode: 'monitor',
+    monitorOnly: true, detect: { bin: 'ossec-control', args: ['status'] },
+    license: 'GPL-2.0', heavy: true, stages: ['s30'],
+    desc: 'Log monitoring and anomaly detection. Evaluate agent, access and resource needs.' },
+  { id: 'subfinder', name: 'Subfinder', category: 'discovery', mode: 'passive',
+    detect: { bin: 'subfinder', args: ['-version'] }, parseVersion: /([\d.]+)/,
+    license: 'MIT', heavy: false, stages: ['s29'], desc: 'Passive subdomain collection. Providers and sources rate-limited.' },
+  { id: 'naabu', name: 'Naabu', category: 'discovery', mode: 'active',
+    detect: { bin: 'naabu', args: ['-version'] }, parseVersion: /([\d.]+)/,
+    license: 'MIT', heavy: true, rateLimited: true, stages: ['s29'],
+    desc: 'Open-port discovery inside allowed scope. Rate and port-count capped.' },
+  { id: 'builtwith', name: 'BuiltWith', category: 'fingerprint', mode: 'passive-external',
+    apiCheck: 'builtwith', needsKeySetting: 'builtwith_api_key',
+    license: 'BuiltWith API terms (paid)', heavy: false, stages: ['s29'],
+    desc: 'Technology lookup via official website/API with valid access, not a free local CLI.' },
+  { id: 'virustotal', name: 'VirusTotal', category: 'reputation', mode: 'passive-external',
+    apiCheck: 'virustotal', needsKeySetting: 'virustotal_api_key',
+    license: 'VirusTotal API terms', heavy: false, stages: ['s10'],
+    desc: 'URL/domain reputation via official API with key. Never download or execute files.' },
+  { id: 'urlscan', name: 'urlscan.io', category: 'reputation', mode: 'passive-external',
+    apiCheck: 'urlscan', needsKeySetting: 'urlscan_api_key',
+    license: 'urlscan.io API terms', heavy: false, stages: ['s10'],
+    desc: 'URL analysis submission. Privacy mode selectable, never submit internal/sensitive URLs.' },
   { id: 'sucuri', name: 'Sucuri SiteCheck', category: 'reputation', mode: 'passive-external',
     apiCheck: 'sucuri', needsKeySetting: 'sucuri_api_key', license: 'Sucuri Scanning API (paid plan)',
     heavy: false, stages: ['s10'],
@@ -149,8 +220,22 @@ export async function refreshToolStatuses() {
     } else if (t.apiCheck === 'ssllabs') {
       status = 'available';
       detail = t.needsOptIn ? 'External service — opt-in per scan' : 'Public API, no key required';
+    } else if (t.unverified) {
+      status = 'unsupported';
+      detail = 'Chua xac minh ten du an / repository / chuc nang — khong gia dinh co san';
+    } else if (t.protectOnly || t.monitorOnly) {
+      status = 'unsupported';
+      detail = t.protectOnly
+        ? 'Che do bao ve (WAF/gateway), khong phai scanner doc lap — cau hinh rieng'
+        : 'Che do giam sat (monitoring), khong phai scanner doc lap — can host giam sat rieng';
+    } else if (t.apiCheck) {
+      const keyName = t.needsKeySetting;
+      const hasKey = keyName ? !!getSetting(keyName) : true;
+      if (keyName && !hasKey) { status = 'needs-config'; detail = 'Can API key (Settings → System / external-keys)'; }
+      else { status = 'available'; detail = 'API da cau hinh / External service ready'; }
     } else if (t.detect) {
-      const binPath = which(t.detect.bin);
+      let binPath = which(t.detect.bin);
+      if (!binPath && t.altBin) { try { fs.accessSync(t.altBin, fs.constants.X_OK); binPath = t.altBin; } catch {} }
       if (binPath) {
         const r = await probeBin(t.detect.bin, t.detect.args);
         const m = t.parseVersion ? (r.output || '').match(t.parseVersion) : null;
@@ -274,6 +359,52 @@ export function runTool(bin, args, { timeoutMs = 120_000, maxBytes = 512 * 1024,
       });
     });
   });
+}
+
+/**
+ * Unified adapter runner — every tool uses this interface:
+ * installed/API check, version/compat check, scope validation (caller),
+ * timeout + resource caps, sanitized stdout/stderr, normalized status,
+ * persisted run state + timing + error, abortable, no secrets in logs.
+ * States: available | missing | disabled | running | completed | partial | failed | cancelled | unsupported.
+ */
+export async function runAdapter(ctx, toolId, { args = [], timeoutMs = 120000, maxBytes = 512*1024, parse = null } = {}) {
+  const tool = TOOLS.find((x) => x.id === toolId);
+  const startedAt = nowMs();
+  if (!tool) { return { status: 'unsupported', detail: 'unknown-tool' }; }
+  if (tool.unverified) {
+    recordToolRun({ scanId: ctx.scan.id, toolId, status: 'unsupported', startedAt, stderrExcerpt: 'unverified-project' });
+    ctx.log('warn', tool.name + ': chua xac minh du an/repo/chuc nang — bo qua, khong gia lap ket qua');
+    return { status: 'unsupported', detail: 'unverified' };
+  }
+  if (tool.protectOnly || tool.monitorOnly) {
+    recordToolRun({ scanId: ctx.scan.id, toolId, status: 'unsupported', startedAt, stderrExcerpt: tool.protectOnly ? 'protect-mode' : 'monitor-mode' });
+    ctx.log('info', tool.name + ': che do ' + (tool.protectOnly ? 'bao ve (WAF/gateway)' : 'giam sat') + ' — khong chay nhu scanner doc lap');
+    return { status: 'unsupported', detail: tool.protectOnly ? 'protect-mode' : 'monitor-mode' };
+  }
+  const stored = loadStored()[toolId];
+  if (stored && stored.userDisabled) {
+    recordToolRun({ scanId: ctx.scan.id, toolId, status: 'cancelled', startedAt, stderrExcerpt: 'disabled' });
+    return { status: 'disabled', detail: 'user-disabled' };
+  }
+  if (!toolAvailable(toolId)) {
+    const st = (stored && stored.status) || 'missing';
+    recordToolRun({ scanId: ctx.scan.id, toolId, status: st === 'needs-config' ? 'failed' : st, startedAt, stderrExcerpt: (stored && stored.detail || st).slice(0, 300) });
+    ctx.log('info', tool.name + ' khong san sang (' + st + ') — bo qua');
+    return { status: st, detail: stored && stored.detail };
+  }
+  if (!ctx.getTarget()) return { status: 'failed', detail: 'no-target-scope' };
+  const bin = tool.detect ? tool.detect.bin : toolId;
+  const r = await runTool(bin, args, { timeoutMs, maxBytes, signal: ctx.signal });
+  if (ctx.signal && ctx.signal.aborted) {
+    recordToolRun({ scanId: ctx.scan.id, toolId, version: stored && stored.version, status: 'cancelled', exitCode: r.exitCode, startedAt, stderrExcerpt: 'cancelled_by_user' });
+    return { status: 'cancelled', run: r };
+  }
+  const status = r.ok ? 'completed' : (r.stdout && r.stdout.length ? 'partial' : 'failed');
+  recordToolRun({ scanId: ctx.scan.id, toolId, version: stored && stored.version, status, exitCode: r.exitCode, startedAt, stderrExcerpt: (r.stderr || r.spawnError || '').slice(0, 500) });
+  let parsed = null;
+  if (parse && r.stdout) { try { parsed = parse(r.stdout.slice(0, 200000)); } catch (e) { parsed = { parseError: String(e.message).slice(0, 200) }; } }
+  return { status, run: r, parsed, version: stored && stored.version };
 }
 
 export function redactSecrets(s) {

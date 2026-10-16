@@ -58,6 +58,9 @@ function sanitizeOptions(o, limits) {
   if (Array.isArray(o.authzEndpoints)) out.authzEndpoints = o.authzEndpoints.map(String).slice(0, 20);
   if (Array.isArray(o.idorPairs)) out.idorPairs = o.idorPairs.slice(0, 5);
   if (typeof o.wpscanToken === 'string') out.wpscanToken = o.wpscanToken.slice(0, 200);
+  if (o.urlscan) out.urlscan = true;
+  if (o.urlscanVisibility === 'unlisted' || o.urlscanVisibility === 'public') out.urlscanVisibility = o.urlscanVisibility;
+  if (typeof o.nucleiSeverity === 'string') out.nucleiSeverity = o.nucleiSeverity.slice(0, 60);
   return out;
 }
 
@@ -193,6 +196,11 @@ r.get('/:id/export', (req, res) => {
     res.setHeader('Content-Disposition', 'attachment; filename="clab-' + s.id + '.html"');
     return res.send(renderHtml(stamp, s, stages, findings));
   }
+  if (format === 'md' || format === 'markdown') {
+    res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="clab-' + s.id + '.md"');
+    return res.send(renderMarkdown(stamp, s, stages, findings, toolRuns));
+  }
   res.setHeader('Content-Disposition', 'attachment; filename="clab-' + s.id + '.json"');
   res.json({ ...stamp, scan: { ...s, scope: safeParse(s.scope), options: maskOptions(safeParse(s.options)) }, stages, findings });
 });
@@ -201,6 +209,28 @@ function maskOptions(o) {
   const c = { ...o };
   delete c.wpscanToken;
   return c;
+}
+function renderMarkdown(stamp, s, stages, findings, toolRuns) {
+  const L = [];
+  L.push('# CLAB — WhiteHat Lab report');
+  L.push('');
+  L.push(`- Scan: \`${stamp.scanId}\` · Generated: ${stamp.generatedAt}`);
+  L.push(`- Target: ${stamp.target} · Mode: ${stamp.mode} · Status: ${stamp.status}`);
+  L.push('');
+  L.push('## Tool runs');
+  for (const tr of toolRuns || []) L.push(`- ${tr.tool_id}: ${tr.status}${tr.version ? ' (' + tr.version + ')' : ''}`);
+  L.push('');
+  L.push(`## Findings (${findings.length})`);
+  L.push('');
+  L.push('| Severity | Title | Asset | Tool | Confidence | Status |');
+  L.push('|---|---|---|---|---|---|');
+  for (const f of findings) L.push(`| ${f.severity} | ${String(f.title || '').replace(/\|/g, '/').slice(0, 160)} | ${String(f.asset || '').slice(0, 80)} | ${f.tool} | ${f.confidence} | ${f.status} |`);
+  L.push('');
+  L.push('## Stages');
+  for (const st of stages || []) L.push(`- ${st.stage_id} ${st.name}: ${st.status}${st.error ? ' — ' + st.error : ''}`);
+  L.push('');
+  L.push('_Evidence tách bạch khỏi diễn giải AI. Secrets đã bị cắt._');
+  return L.join('\n');
 }
 function safeParse(s) { try { return JSON.parse(s); } catch { return null; } }
 function esc(s) { return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }

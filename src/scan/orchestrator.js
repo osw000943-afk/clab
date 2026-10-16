@@ -33,9 +33,9 @@ export function workerState() {
 export const MODES = {
   quick: ['s01', 's02', 's03', 's06'],
   standard: ['s01', 's02', 's03', 's04', 's05', 's06', 's07', 's10', 's19'],
-  deep: ['s01', 's02', 's03', 's04', 's05', 's06', 's07', 's08', 's09', 's10', 's19', 's20', 's21', 's22', 's23'],
+  deep: ['s01', 's02', 's03', 's04', 's05', 's06', 's07', 's08', 's09', 's10', 's25', 's26', 's27', 's28', 's29', 's30', 's19', 's20', 's21', 's22', 's23'],
   full: ['s01', 's02', 's03', 's04', 's05', 's06', 's07', 's08', 's09', 's10', 's11', 's12', 's13',
-    's14', 's15', 's16', 's17', 's18', 's19', 's20', 's21', 's22', 's23', 's24'],
+    's14', 's15', 's16', 's17', 's18', 's25', 's26', 's27', 's28', 's29', 's30', 's19', 's20', 's21', 's22', 's23', 's24'],
 };
 
 export function resolveStageIds(mode, moduleSelection) {
@@ -111,10 +111,6 @@ export function kickWorker() {
 
 /** Startup recovery: interrupted scans become failed with a clear reason (results kept). */
 export function recoverInterruptedScans() {
-  const rows = q(`SELECT id FROM scans WHERE status IN ('running','cancelling','queued')`);
-  for (const r of rows) {
-    if (q1(`SELECT1x FROM scan_stages WHERE scan_id=? AND status='running'`, [r.id])) { /* noop */ }
-  }
   const running = q(`SELECT id FROM scans WHERE status IN ('running','cancelling')`);
   for (const r of running) {
     run(`UPDATE scans SET status='failed', finished_at=?, error='interrupted_by_server_restart' WHERE id=?`, [nowMs(), r.id]);

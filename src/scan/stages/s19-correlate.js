@@ -25,7 +25,7 @@ export default {
     for (const group of corroborated) {
       for (const f of group) {
         if (f.confidence !== 'high') {
-          q('UPDATE findings SET confidence=? WHERE id=?', ['high', f.id]);
+          run('UPDATE findings SET confidence=? WHERE id=?', ['high', f.id]);
         }
       }
     }
@@ -66,7 +66,7 @@ export default {
       })),
     })).filter((g) => g.items.length);
 
-    ctx.setSummary({ totalFindings: findings.length, corroboratedGroups: corroborated.length, comparison, remediationPlan: plan });
+    ctx.setSummary({ totalFindings: findings.length, corroboratedGroups: corroborated.length, mergedDuplicates: corroborated.length, comparison, remediationPlan: plan });
     return { summary: ctx._summary };
   },
 };

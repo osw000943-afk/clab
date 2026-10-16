@@ -189,4 +189,6 @@ export default {
   'common.next': 'Sau',
   'common.page': 'Trang',
   'common.sessionExpired': 'Phiên đã hết hạn — vui lòng đăng nhập lại.',
+  'scan.opt.urlscan': 'Gửi URL tới urlscan.io (dịch vụ ngoài — chọn unlisted/public)',
+  'tools.batch2': 'Nhóm mở rộng (20 công cụ mới)',
 };

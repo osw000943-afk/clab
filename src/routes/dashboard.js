@@ -49,7 +49,7 @@ r.get('/stats', (req, res) => {
   ].sort((a, b) => b.at - a.at).slice(0, 14);
 
   const tools = getToolStatuses();
-  const toolSummary = { available: 0, missing: 0, disabled: 0, 'needs-config': 0, failed: 0, unsupported: 0, incompatible: 0 };
+  const toolSummary = { available: 0, missing: 0, disabled: 0, 'needs-config': 0, failed: 0, unsupported: 0, incompatible: 0, running: 0, completed: 0, partial: 0, cancelled: 0 };
   for (const t of Object.values(tools)) {
     if (toolSummary[t.status] !== undefined) toolSummary[t.status]++;
   }

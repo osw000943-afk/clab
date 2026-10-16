@@ -35,8 +35,8 @@ export function addFinding(f) {
   };
   if (!row.scan_id || !row.title || !row.asset) throw new Error('finding_missing_required_fields');
 
-  // dedupe within the same scan: same asset+title → bump last_seen + merge evidence
-  const dup = q1('SELECT id, evidence FROM findings WHERE scan_id=? AND asset=? AND title=?',
+  // dedupe within the same scan: same asset+title (case-insensitive) → merge, avoid double-count
+  const dup = q1('SELECT id, evidence FROM findings WHERE scan_id=? AND LOWER(asset)=LOWER(?) AND LOWER(title)=LOWER(?)',
     [row.scan_id, row.asset, row.title]);
   if (dup) {
     const merged = (dup.evidence + '\n---\n' + row.evidence).slice(-8000);

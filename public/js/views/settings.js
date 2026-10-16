@@ -182,7 +182,12 @@ export async function renderSystemSettings(m, root) {
         <div class="field"><label>${esc(t('sys.gsbKey'))}</label><input class="input" id="k-gsb" type="password" autocomplete="new-password" placeholder="AIza…"></div>
         <div class="field"><label>${esc(t('sys.sucuriKey'))}</label><input class="input" id="k-sucuri" type="password" autocomplete="new-password"></div>
         <div class="field"><label>${esc(t('sys.sucuriDomain'))}</label><input class="input" id="k-sdomain" placeholder="monitorx.sucuri.net"></div>
+        <div class="field"><label>VirusTotal API key</label><input class="input" id="k-vt" type="password" autocomplete="new-password"></div>
+        <div class="field"><label>urlscan.io API key</label><input class="input" id="k-us" type="password" autocomplete="new-password"></div>
+        <div class="field"><label>BuiltWith API key</label><input class="input" id="k-bw" type="password" autocomplete="new-password"></div>
+        <div class="field"><label>Wazuh API (base|token)</label><input class="input" id="k-wz" type="password" autocomplete="new-password"></div>
       </div>
+      <p class="muted" style="font-size:12.5px">VirusTotal/urlscan: hostname/URL chi gui khi co key + opt-in; khong gui du lieu rieng tu. Wazuh: khuyen dung host giam sat rieng (1GB RAM).</p>
       <button class="btn" id="k-save">${esc(t('sys.saveKeys'))}</button>
       <span class="inline-note" id="k-state" style="margin-left:10px"></span>
     </div>
@@ -255,10 +260,14 @@ export async function renderSystemSettings(m, root) {
     const body = {};
     if ($('#k-gsb', root).value) body.gsb_api_key = $('#k-gsb', root).value.trim();
     if ($('#k-sucuri', root).value) body.sucuri_api_key = $('#k-sucuri', root).value.trim();
+    if ($('#k-vt', root).value) body.virustotal_api_key = $('#k-vt', root).value.trim();
+    if ($('#k-us', root).value) body.urlscan_api_key = $('#k-us', root).value.trim();
+    if ($('#k-bw', root).value) body.builtwith_api_key = $('#k-bw', root).value.trim();
+    if ($('#k-wz', root).value) body.wazuh_api = $('#k-wz', root).value.trim();
     if ($('#k-sdomain', root).value) body.sucuri_monitor_domain = $('#k-sdomain', root).value.trim();
     try {
       await api('/api/tools/external-keys', { method: 'POST', body });
-      $('#k-gsb', root).value = ''; $('#k-sucuri', root).value = '';
+      $('#k-gsb', root).value = ''; $('#k-sucuri', root).value = ''; $('#k-vt', root).value=''; $('#k-us', root).value=''; $('#k-bw', root).value=''; $('#k-wz', root).value='';
       toast('✓', 'success');
     } catch (e) { toast(e.message, 'error'); }
   });

@@ -97,7 +97,7 @@ describe('scan lifecycle', () => {
     const r = await req('/api/tools');
     assert.equal(r.status, 200);
     assert.ok(Array.isArray(r.json));
-    for (const t of r.json) assert.ok(['available', 'missing', 'disabled', 'needs-config', 'failed', 'unsupported', 'incompatible'].includes(t.status), t.id + ':' + t.status);
+    for (const t of r.json) assert.ok(['available', 'missing', 'disabled', 'needs-config', 'failed', 'unsupported', 'incompatible', 'running', 'completed', 'partial', 'cancelled'].includes(t.status), t.id + ':' + t.status);
   });
 });
 

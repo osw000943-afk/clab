@@ -189,4 +189,6 @@ export default {
   'common.next': 'Next',
   'common.page': 'Page',
   'common.sessionExpired': 'Session expired — please sign in again.',
+  'scan.opt.urlscan': 'Submit URL to urlscan.io (external — unlisted/public)',
+  'tools.batch2': 'Extended group (20 new tools)',
 };

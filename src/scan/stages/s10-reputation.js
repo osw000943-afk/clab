@@ -81,6 +81,39 @@ export default {
       }
     }
 
+    // ---- VirusTotal (official API, key required) ----
+    const vtKey = getSetting('virustotal_api_key');
+    if (!vtKey) { summary.virustotal = 'needs-config (Settings → System)'; }
+    else {
+      try {
+        ctx.log('warn', 'Sap gui hostname/domain toi VirusTotal theo yeu cau chu Lab. Khong gui du lieu rieng tu.');
+        const rr = await ctx.fetch('https://www.virustotal.com/api/v3/domains/' + encodeURIComponent(t.host), { headers: { 'x-apikey': vtKey, 'user-agent': 'clab-scanner/1.0' }, timeoutMs: 15000, maxBytes: 65536 });
+        summary.externalServicesUsed.push('virustotal');
+        const j = JSON.parse(rr.body.toString('utf8'));
+        const stats = j.data && j.data.attributes && j.data.attributes.last_analysis_stats;
+        summary.virustotal = stats || { ok: true };
+        const mal = stats ? (stats.malicious || 0) + (stats.suspicious || 0) : 0;
+        if (mal > 0) ctx.addFinding({ asset: t.host, stageId: 's10', tool: 'virustotal', severity: 'high', confidence: 'high', title: 'VirusTotal: domain bi danh dau doc hai (' + mal + ' engines)', description: 'VirusTotal tra ve ' + mal + ' engines malicious/suspicious. Khong tai hay thuc thi tep.', evidence: JSON.stringify(stats).slice(0,1500), recommendation: 'Dieu tra ma doc theo quy trinh; khong mo tep dang ngo tren may tram.', verification: 'needs-verification' });
+      } catch (e) { summary.virustotal = 'failed: ' + e.message.slice(0,120); }
+    }
+    // ---- urlscan.io (opt-in per scan, privacy selectable) ----
+    let scanOpts = {};
+    try { scanOpts = JSON.parse(ctx.scan.options || '{}'); } catch {}
+    const usKey = getSetting('urlscan_api_key');
+    if (!scanOpts.urlscan) { summary.urlscan = 'skipped (opt-in per scan via options.urlscan + visibility)'; }
+    else if (!usKey) { summary.urlscan = 'needs-config (urlscan_api_key)'; }
+    else if (/localhost|127\.|10\.|192\.168\.|169\.254|\.local|\.internal/i.test(t.url.toString()) || /token=|session|password|secret/i.test(t.url.toString())) { summary.urlscan = 'refused: internal/tokenized/sensitive URL - never submit to public service'; }
+    else {
+      try {
+        const vis = scanOpts.urlscanVisibility === 'unlisted' ? 'unlisted' : 'public';
+        ctx.log('warn', 'Sap gui URL toi urlscan.io (' + vis + ') theo yeu cau. Khong gui URL noi bo/token/nhay cam.');
+        const rr = await ctx.fetch('https://urlscan.io/api/v1/scan/', { method: 'POST', headers: { 'content-type': 'application/json', 'API-Key': usKey }, body: JSON.stringify({ url: t.url.toString(), visibility: vis }), timeoutMs: 30000, maxBytes: 65536 });
+        summary.externalServicesUsed.push('urlscan.io');
+        const j = JSON.parse(rr.body.toString('utf8'));
+        summary.urlscan = { uuid: j.uuid, result: j.result };
+        ctx.addFinding({ asset: t.host, stageId: 's10', tool: 'urlscan', severity: 'informational', confidence: 'high', title: 'urlscan.io: da gui phan tich (' + vis + ')', description: 'URL da duoc gui toi urlscan.io. Thu thap thong tin trang va ket qua do dich vu tra ve.', evidence: JSON.stringify(j).slice(0,1200), recommendation: 'Mo result URL de xem chi tiet.', verification: 'confirmed' });
+      } catch (e) { summary.urlscan = 'failed: ' + e.message.slice(0,120); }
+    }
     // disclosure note — this stage queries external services
     if (summary.externalServicesUsed.length) {
       ctx.log('warn', `Stage này đã gửi hostname tới: ${summary.externalServicesUsed.join(', ')}`);

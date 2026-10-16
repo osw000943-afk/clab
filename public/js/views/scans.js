@@ -6,11 +6,12 @@ const STAGE_LABELS = {
   s07: 'TLS', s08: 'Misconfig', s09: 'WordPress', s10: 'Reputation', s11: 'ZAP', s12: 'SQLi',
   s13: 'XSS', s14: 'Deps/CVE', s15: 'SAST', s16: 'Secrets/JS', s17: 'IaC', s18: 'Traffic',
   s19: 'Correlate', s20: 'Deep Audit', s21: 'DB Audit', s22: 'Privesc', s23: 'Bypass', s24: 'Availability',
+  s25: 'WebVuln+', s26: 'Content', s27: 'CMS+', s28: 'TLS+', s29: 'OSINT', s30: 'Protect',
 };
 
 /* ================= CREATE SCAN ================= */
 export async function renderScanNew(m, root) {
-  const ALL_STAGES = ['s01','s02','s03','s04','s05','s06','s07','s08','s09','s10','s11','s12','s13','s14','s15','s16','s17','s18','s19','s20','s21','s22','s23','s24'];
+  const ALL_STAGES = ['s01','s02','s03','s04','s05','s06','s07','s08','s09','s10','s11','s12','s13','s14','s15','s16','s17','s18','s19','s20','s21','s22','s23','s24','s25','s26','s27','s28','s29','s30'];
 
   root.innerHTML = `
     <form id="scan-form" class="card" style="max-width:860px">
@@ -48,8 +49,11 @@ export async function renderScanNew(m, root) {
         <div style="margin-top:12px">
           <label class="checkbox"><input type="checkbox" id="o-zap"> <span>${esc(t('scan.opt.zap'))}</span></label>
           <label class="checkbox"><input type="checkbox" id="o-ssllabs"> <span>${esc(t('scan.opt.ssllabs'))}</span></label>
+          <label class="checkbox"><input type="checkbox" id="o-urlscan"> <span>urlscan.io (external, privacy selectable)</span></label>
           <label class="checkbox"><input type="checkbox" id="o-avail"> <span>${esc(t('scan.opt.availability'))}</span></label>
           <div class="grid cols-2">
+            <div class="field"><label>urlscan visibility</label><select id="o-vis" class="input"><option value="unlisted">unlisted</option><option value="public">public</option></select></div>
+            <div class="field"><label>Nuclei severity</label><input id="o-nsev" class="input" value="medium,high,critical"></div>
             <div class="field"><label for="o-rps">RPS</label><input id="o-rps" class="input" type="number" value="5" min="1" max="20"></div>
             <div class="field"><label for="o-sec">Seconds</label><input id="o-sec" class="input" type="number" value="10" min="3" max="60"></div>
           </div>
@@ -92,6 +96,9 @@ export async function renderScanNew(m, root) {
             zap: $('#o-zap', root).checked,
             ssllabs: $('#o-ssllabs', root).checked,
             availability: $('#o-avail', root).checked,
+            urlscan: $('#o-urlscan', root).checked,
+            urlscanVisibility: ($('#o-vis', root)||{value:'unlisted'}).value,
+            nucleiSeverity: ($('#o-nsev', root)||{value:''}).value,
             loadRps: Number($('#o-rps', root).value),
             loadSeconds: Number($('#o-sec', root).value),
           },

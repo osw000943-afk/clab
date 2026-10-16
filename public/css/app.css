@@ -8,9 +8,9 @@
   --bg: #F8FAFC;
   --surface: #FFFFFF;
   --surface-2: #F1F5F9;
-  --primary: #1E40AF;
-  --primary-hover: #1D4ED8;
-  --primary-soft: #DBEAFE;
+  --primary: #38BDF8;
+  --primary-hover: #0EA5E9;
+  --primary-soft: #E0F2FE;
   --on-primary: #FFFFFF;
   --accent: #D97706;          /* amber — warnings & highlights */
   --accent-soft: #FEF3C7;
@@ -24,7 +24,7 @@
   --text-3: #64748B;
   --border: #E2E8F0;
   --border-strong: #CBD5E1;
-  --ring: #1E40AF;
+  --ring: #0EA5E9;
   --radius: 10px;
   --radius-sm: 7px;
   --shadow-1: 0 1px 2px rgba(15, 23, 42, .05), 0 1px 3px rgba(15, 23, 42, .06);
@@ -123,8 +123,9 @@ a:hover { text-decoration: underline; }
 .btn:hover { background: var(--surface-2); border-color: var(--border-strong); }
 .btn:active { transform: translateY(1px); }
 .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
-.btn.primary { background: var(--primary); border-color: var(--primary); color: var(--on-primary); box-shadow: var(--shadow-1); }
-.btn.primary:hover { background: var(--primary-hover); box-shadow: var(--shadow-2); }
+.btn.primary { background: linear-gradient(180deg, #7DD3FC, #38BDF8); border-color: #0EA5E9; color: #082F49; font-weight: 700; }
+.btn.primary:hover { background: linear-gradient(180deg, #38BDF8, #0EA5E9); color: #fff; box-shadow: var(--shadow-2); }
+.btn:active { animation: press-bounce .32s var(--ease); }
 .btn.danger { background: var(--destructive); border-color: var(--destructive); color: #fff; }
 .btn.danger:hover { background: #B91C1C; }
 .btn.ghost { background: transparent; border-color: transparent; color: var(--text-2); }
@@ -205,7 +206,10 @@ a:hover { text-decoration: underline; }
   padding: 18px; box-shadow: var(--shadow-1);
   transition: transform .18s var(--ease), box-shadow .18s var(--ease), border-color .18s;
 }
-.card.hoverable:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); border-color: var(--border-strong); }
+.card.hoverable { transform: perspective(700px) rotateX(0deg) rotateY(-1.2deg); transform-origin: left center; border-left: 3px solid var(--primary); transition: transform .18s var(--ease), box-shadow .18s var(--ease); }
+.card.hoverable:hover { transform: perspective(700px) rotateX(0deg) rotateY(0deg); box-shadow: var(--shadow-2); border-color: var(--border-strong); border-left-color: var(--primary); }
+.card.hoverable:active { animation: press-bounce .38s var(--ease); }
+@keyframes press-bounce { 0% { transform: perspective(700px) scale(1); } 35% { transform: perspective(700px) scale(.965) translateY(2px); } 70% { transform: perspective(700px) scale(1.012) translateY(-1px); } 100% { transform: perspective(700px) scale(1); } }
 .card h3 { margin: 0 0 4px; font-size: 13px; font-weight: 650; color: var(--text-3); letter-spacing: .02em; text-transform: uppercase; }
 .card .big { font-size: 30px; font-weight: 750; letter-spacing: -.03em; line-height: 1.15; font-family: var(--mono); }
 .card .sub { font-size: 12.5px; color: var(--text-3); margin-top: 3px; }

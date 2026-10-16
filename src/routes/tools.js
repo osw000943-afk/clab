@@ -36,25 +36,30 @@ r.post('/:id/disable', (req, res) => {
 });
 
 /** External-service keys (write-only, masked) used by reputation tools. */
+const EXT_KEYS = ['gsb_api_key', 'sucuri_api_key', 'virustotal_api_key', 'urlscan_api_key', 'builtwith_api_key', 'wazuh_api'];
 r.get('/external-keys', (req, res) => {
   res.json({
     gsb_api_key: !!getSetting('gsb_api_key'),
     sucuri_api_key: !!getSetting('sucuri_api_key'),
+    virustotal_api_key: !!getSetting('virustotal_api_key'),
+    urlscan_api_key: !!getSetting('urlscan_api_key'),
+    builtwith_api_key: !!getSetting('builtwith_api_key'),
+    wazuh_api: !!getSetting('wazuh_api'),
     sucuri_monitor_domain: getSetting('sucuri_monitor_domain') || null,
   });
 });
 
 r.post('/external-keys', (req, res) => {
-  const { gsb_api_key, sucuri_api_key, sucuri_monitor_domain } = req.body || {};
-  if (typeof gsb_api_key === 'string') setSetting('gsb_api_key', gsb_api_key.slice(0, 200));
-  if (typeof sucuri_api_key === 'string') setSetting('sucuri_api_key', sucuri_api_key.slice(0, 200));
-  if (typeof sucuri_monitor_domain === 'string') setSetting('sucuri_monitor_domain', sucuri_monitor_domain.slice(0, 120));
-  refreshToolStatuses().then(() => res.json({ ok: true, keys: { gsb: !!getSetting('gsb_api_key'), sucuri: !!getSetting('sucuri_api_key') } }));
+  const b = req.body || {};
+  for (const k of EXT_KEYS) {
+    if (typeof b[k] === 'string' && b[k].length) setSetting(k, b[k].slice(0, 300));
+  }
+  if (typeof b.sucuri_monitor_domain === 'string') setSetting('sucuri_monitor_domain', b.sucuri_monitor_domain.slice(0, 120));
+  refreshToolStatuses().then(() => res.json({ ok: true }));
 });
 
 r.delete('/external-keys', (req, res) => {
-  setSetting('gsb_api_key', '');
-  setSetting('sucuri_api_key', '');
+  for (const k of EXT_KEYS) setSetting(k, '');
   refreshToolStatuses().then(() => res.json({ ok: true }));
 });
 
