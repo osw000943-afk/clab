@@ -81,7 +81,7 @@ export function line(points, { width = 460, height = 170, labelKey = 'label', va
 }
 
 function emptyChart(w, h) {
-  return `<div class="empty" style="padding:28px 14px"><div class="ico">⌀</div><p>—</p></div>`;
+  return `<div class="empty" style="padding:28px 14px"><div class="ico"></div><p>—</p></div>`;
 }
 function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
 export { SEV_COLORS };

@@ -23,11 +23,13 @@ export async function renderDashboard(m, root) {
     return;
   }
 
+  const ts = stats.toolSummary || {};
+  const tsTotal = Object.values(ts).reduce((a, b) => a + b, 0) || 1;
   $('#kpis', root).innerHTML = [
     { label: t('dash.scans'), value: stats.totalScans, sub: `${stats.byStatus.completed || 0} completed` },
     { label: t('dash.assets'), value: stats.uniqueAssets, sub: '' },
     { label: t('dash.serious'), value: stats.openCritical, sub: 'critical + high', danger: stats.openCritical > 0 },
-    { label: t('dash.toolsAvail'), value: `${stats.toolSummary.available}/${Object.values(stats.toolSummary).reduce((a, b) => a + b, 0)}`, sub: 'available / total' },
+    { label: t('dash.toolsAvail'), value: `${ts.available || 0}/${tsTotal}`, sub: 'available / total' },
   ].map((k) => `<div class="card hoverable"><h3>${esc(k.label)}</h3>
       <div class="big" ${k.danger ? 'style="color:#B91C1C"' : ''}>${esc(String(k.value))}</div>
       <div class="sub">${esc(k.sub || '')}</div></div>`).join('');
