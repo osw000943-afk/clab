@@ -18,7 +18,7 @@ export async function renderHealth(m, root) {
         <div class="card hoverable"><h3>${esc(t('health.disk'))}</h3><div class="big">${h.diskFreeMB != null ? h.diskFreeMB + ' MB' : '—'}</div><div class="sub">total RAM hệ thống: ${h.memory.totalSystemMB} MB</div></div>
         <div class="card hoverable"><h3>${esc(t('health.db'))}</h3><div class="big">${esc(h.database)}</div><div class="sub">WAL</div></div>
         <div class="card hoverable"><h3>${esc(t('health.worker'))}</h3><div class="big">${h.worker.running ? 'busy' : 'idle'}</div><div class="sub">${t('dash.queue')}: ${h.worker.queued}</div></div>
-        <div class="card hoverable"><h3>${esc(t('health.ai'))}</h3><div class="big">${h.ai.configured ? '✓' : '—'}</div><div class="sub">${h.ai.configured ? t('health.configured') : t('health.notConfigured')}</div></div>`;
+        <div class="card hoverable"><h3>${esc(t('health.ai'))}</h3><div class="big">${h.ai.configured ? 'ok' : '—'}</div><div class="sub">${h.ai.configured ? t('health.configured') : t('health.notConfigured')}</div></div>`;
       $('#h-env', root).innerHTML = [
         ['Node', navigator.userAgent.includes('Node') ? '—' : 'browser'],
         ['Password', h.auth.passwordConfigured ? t('health.configured') : t('health.notConfigured')],
@@ -27,7 +27,7 @@ export async function renderHealth(m, root) {
         ['Tools detected', String(h.tools.total)],
       ].map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(String(v))}</dd>`).join('');
     } catch (e) {
-      $('#h-cards', root).innerHTML = `<div class="empty"><div class="ico">⚠</div><p>${esc(e.message)}</p></div>`;
+      $('#h-cards', root).innerHTML = `<div class="empty"><div class="ico"></div><p>${esc(e.message)}</p></div>`;
     }
   };
   $('#h-refresh', root).addEventListener('click', load);

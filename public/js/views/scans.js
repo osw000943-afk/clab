@@ -60,7 +60,7 @@ export async function renderScanNew(m, root) {
         </div>
       </details>
       <div id="scan-form-error" class="form-error hidden" role="alert"></div>
-      <button class="btn primary" type="submit" id="start-btn">${esc(t('scan.start'))}</button>
+      <button class="btn-tilt primary" type="submit" id="start-btn">${esc(t('scan.start'))}</button>
     </form>`;
 
   const picked = new Set();
@@ -126,21 +126,21 @@ export async function renderScanList(m, root) {
         <option value="">${esc(t('history.allStatus'))}</option>
         <option>queued</option><option>running</option><option>completed</option><option>partial</option><option>failed</option><option>cancelled</option>
       </select>
-      <button class="btn small" id="h-compare">${esc(t('history.compare'))}</button>
+      <button class="btn-tilt small" id="h-compare">${esc(t('history.compare'))}</button>
       <span class="spacer"></span>
       <span class="inline-note" id="h-count"></span>
     </div>
     <div id="h-table"></div>
     <div class="toolbar" style="margin-top:14px">
       <span class="spacer"></span>
-      <button class="btn small" id="h-prev">${esc(t('common.prev'))}</button>
+      <button class="btn-tilt small" id="h-prev">${esc(t('common.prev'))}</button>
       <span class="inline-note" id="h-page"></span>
-      <button class="btn small" id="h-next">${esc(t('common.next'))}</button>
+      <button class="btn-tilt small" id="h-next">${esc(t('common.next'))}</button>
     </div>`;
 
   const load = async () => {
     const data = await api(`/api/scans?page=${page}&pageSize=15&q=${encodeURIComponent(qStr)}&status=${encodeURIComponent(statusStr)}`);
-    $('#h-count', root).textContent = `${data.total} ${t('common.of')} …`;
+    $('#h-count', root).textContent = `${data.total} ${t('common.of')} ...`;
     $('#h-page', root).textContent = `${t('common.page')} ${data.page}`;
     $('#h-table', root).innerHTML = data.items.length ? `<div class="table-wrap"><table class="data">
       <thead><tr><th></th><th>Target</th><th>Mode</th><th>Status</th><th>Findings</th><th>Created</th><th></th></tr></thead>
@@ -163,7 +163,7 @@ export async function renderScanList(m, root) {
       if (!confirm(t('detail.deleteConfirm'))) return;
       try {
         await api('/api/scans/' + b.dataset.id + '?confirm=yes', { method: 'DELETE' });
-        toast(t('common.save') + ' ✓', 'success');
+        toast(t('common.save') + ' ok', 'success');
         load();
       } catch (ex) { toast(ex.message, 'error'); }
     }));
@@ -235,11 +235,11 @@ export async function renderScanDetail(id, root) {
         </div>
         <span class="spacer"></span>
         ${statusBadge(scan.status)}
-        <button class="btn small" id="d-ai">${esc(t('detail.aiRun'))}</button>
-        <button class="btn small" id="d-export">${esc(t('detail.export'))} ▾</button>
-        <button class="btn small" id="d-rerun">${esc(t('detail.rerun'))}</button>
+        <button class="btn-tilt small" id="d-ai">${esc(t('detail.aiRun'))}</button>
+        <button class="btn-tilt small" id="d-export">${esc(t('detail.export'))} ▾</button>
+        <button class="btn-tilt small" id="d-rerun">${esc(t('detail.rerun'))}</button>
         ${['queued', 'running', 'cancelling'].includes(scan.status) ? `<button class="btn small danger" id="d-cancel">${esc(t('detail.cancel'))}</button>` : ''}
-        <button class="btn ghost small" id="d-del">${esc(t('detail.delete'))}</button>
+        <button class="btn-tilt ghost small" id="d-del">${esc(t('detail.delete'))}</button>
       </div>
       <div class="progress-track" role="progressbar" aria-valuenow="${Math.round((scan.progress || 0) * 100)}">
         <div class="progress-fill" style="width:${Math.round((scan.progress || 0) * 100)}%"></div>
@@ -252,7 +252,7 @@ export async function renderScanDetail(id, root) {
         <pre class="evidence" style="margin-top:8px">${esc(JSON.stringify(scan.scope, null, 2))}</pre></details>` : ''}`;
 
     $('#d-stages', root).innerHTML = (scan.stages || []).map((s) => {
-      const ico = { pending: '·', running: '↻', completed: '✓', failed: '!' }[s.status] || '·';
+      const ico = { pending: '·', running: '↻', completed: 'ok', failed: '!' }[s.status] || '·';
       const summary = s.summary ? `<br><small class="muted mono" style="font-size:11px">${esc(String(s.summary).slice(0, 160))}</small>` : '';
       return `<div class="stage-row ${esc(s.status)}">
         <span class="st-ico">${ico}</span>
@@ -262,7 +262,7 @@ export async function renderScanDetail(id, root) {
 
     $('#d-logs', root).innerHTML = (scan.logs || []).map((l) =>
       `<div class="log-line ${esc(l.level)}">[${new Date(l.ts).toLocaleTimeString()}] ${esc(l.message)}</div>`).join('')
-      || `<div class="log-line muted">…</div>`;
+      || `<div class="log-line muted">...</div>`;
     const logBox = $('#d-logs', root);
     logBox.scrollTop = logBox.scrollHeight;
 
@@ -285,12 +285,12 @@ export async function renderScanDetail(id, root) {
       <thead><tr><th>Tool</th><th>Status</th><th>Exit</th><th>Duration</th></tr></thead>
       <tbody>${trs.map((r) => `<tr><td><span class="tag">${esc(r.tool_id)}</span></td>
         <td>${statusBadge(r.status)}</td><td>${r.exit_code ?? '—'}</td>
-        <td class="muted">${r.finished_at ? fmtDur(r.finished_at - r.started_at) : '…'}</td></tr>`).join('')}</tbody></table></div>`
+        <td class="muted">${r.finished_at ? fmtDur(r.finished_at - r.started_at) : '...'}</td></tr>`).join('')}</tbody></table></div>`
       : `<p class="muted" style="margin:0">—</p>`;
 
     // actions
     $('#d-cancel', root)?.addEventListener('click', () => confirmDialog(t('detail.cancelConfirm'), async () => {
-      try { await api(`/api/scans/${id}/cancel`, { method: 'POST' }); toast('…', 'success'); } catch (e) { toast(e.message, 'error'); }
+      try { await api(`/api/scans/${id}/cancel`, { method: 'POST' }); toast('...', 'success'); } catch (e) { toast(e.message, 'error'); }
     }));
     $('#d-del', root)?.addEventListener('click', async () => {
       if (!confirm(t('detail.deleteConfirm'))) return;

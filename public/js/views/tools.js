@@ -4,7 +4,7 @@ import { t, esc, fmtDate, toast, statusBadge, emptyState, $ } from '../app.js';
 export async function renderTools(m, root) {
   root.innerHTML = `
     <div class="toolbar">
-      <button class="btn primary small" id="tl-refresh">${esc(t('tools.refresh'))}</button>
+      <button class="btn-tilt primary small" id="tl-refresh">${esc(t('tools.refresh'))}</button>
       <span class="inline-note">${esc(t('tools.verified'))}</span>
     </div>
     <div id="tl-table">${emptyState(t('common.loading'))}</div>`;

@@ -19,7 +19,7 @@ export async function renderDashboard(m, root) {
   try {
     stats = await api('/api/dashboard/stats');
   } catch (e) {
-    root.innerHTML = `<div class="empty"><div class="ico">⚠</div><p>${esc(t('common.error') + e.message)}</p></div>`;
+    root.innerHTML = `<div class="empty"><div class="ico"></div><p>${esc(t('common.error') + e.message)}</p></div>`;
     return;
   }
 
@@ -50,14 +50,14 @@ export async function renderDashboard(m, root) {
     label: id, value: r.rate ?? 0, color: r.rate >= 90 ? '#059669' : r.rate >= 60 ? '#D97706' : '#DC2626',
   }));
   $('#tool-chart', root).innerHTML = toolItems.length
-    ? bars(toolItems) + `<div class="inline-note">${esc(Object.entries(stats.toolRates).map(([k, r]) => `${k}: ${r.completed}✓/${r.failed}✗`).join(' · '))}</div>`
+    ? bars(toolItems) + `<div class="inline-note">${esc(Object.entries(stats.toolRates).map(([k, r]) => `${k}: ${r.completed}ok/${r.failed}x`).join(' · '))}</div>`
     : emptyState(t('dash.noDataChart'));
 
   // activity feed
   const act = stats.activity || [];
   $('#activity', root).innerHTML = act.length ? `<div class="stages">${act.map((a) => `
     <div class="stage-row" style="cursor:pointer" data-goto="${esc(a.id || '')}">
-      <span class="st-ico">${a.kind === 'scan' ? '◎' : '⚑'}</span>
+      <span class="st-ico">${a.kind === 'scan' ? '' : ''}</span>
       <span class="st-name">${esc(a.text)}<br><small class="muted">${fmtDate(a.at)}</small></span>
       ${a.severity ? sevBadge(a.severity) : statusBadge(a.status || '')}
     </div>`).join('')}</div>` : emptyState(t('dash.empty'));

@@ -6,7 +6,7 @@ export async function renderAiSettings(m, root) {
   root.innerHTML = `<div id="ai-wrap">${emptyState(t('common.loading'))}</div>`;
   let data;
   try { data = await api('/api/ai'); }
-  catch (e) { $('#ai-wrap', root).innerHTML = `<div class="empty"><div class="ico">⚠</div><p>${esc(e.message)}</p></div>`; return; }
+  catch (e) { $('#ai-wrap', root).innerHTML = `<div class="empty"><div class="ico"></div><p>${esc(e.message)}</p></div>`; return; }
 
   const encReady = data.encryptionReady;
   const active = data.active || {};
@@ -37,7 +37,7 @@ export async function renderAiSettings(m, root) {
         </div>
         <div>
           <div class="field"><label>${esc(t('ai.selectModel'))}</label>
-            <select class="input a-model"><option value="">…</option></select>
+            <select class="input a-model"><option value="">...</option></select>
           </div>
           <div style="display:flex;gap:8px">
             <button class="btn primary small a-activate">${esc(t('ai.activate'))}</button>
@@ -63,7 +63,7 @@ export async function renderAiSettings(m, root) {
           <div class="field"><label>${esc(t('ai.timeout'))}</label><input class="input" id="np-timeout" type="number" value="30000" min="3000" max="300000"></div>
           <div class="field"><label>${esc(t('ai.maxTokens'))}</label><input class="input" id="np-tokens" type="number" value="2048" min="64" max="32768"></div>
         </div>
-        <button class="btn primary" id="np-save" ${encReady ? '' : 'disabled'}>${esc(t('ai.save'))}</button>
+        <button class="btn-tilt primary" id="np-save" ${encReady ? '' : 'disabled'}>${esc(t('ai.save'))}</button>
         <span class="inline-note" style="margin-left:12px">${esc(t('ai.never'))}</span>
       </div>
       <h3 class="section-title">${esc(t('ai.providers'))}</h3>
@@ -79,7 +79,7 @@ export async function renderAiSettings(m, root) {
           timeoutMs: Number($('#np-timeout', root).value),
           maxTokens: Number($('#np-tokens', root).value),
         }});
-        toast('✓', 'success');
+        toast('ok', 'success');
         renderAiSettings(m, root);
       } catch (e) { toast(e.message, 'error'); }
     });
@@ -103,8 +103,8 @@ export async function renderAiSettings(m, root) {
         e.target.disabled = true;
         try {
           const r = await api(`/api/ai/${pid}/test-connection`, { method: 'POST' });
-          status(r.ok ? `✓ ${r.status || 200} · ${r.modelsFound ?? ''} ${r.note || ''}` : `✗ ${r.error}`, r.ok);
-        } catch (ex) { status('✗ ' + ex.message, false); }
+          status(r.ok ? `ok ${r.status || 200} · ${r.modelsFound ?? ''} ${r.note || ''}` : `x ${r.error}`, r.ok);
+        } catch (ex) { status('x ' + ex.message, false); }
         finally { e.target.disabled = false; }
       });
 
@@ -114,7 +114,7 @@ export async function renderAiSettings(m, root) {
           const r = await api(`/api/ai/${pid}/models`);
           if (r.ok) fillModels(r.models);
           else { fillModels(r.cached || []); status((r.error || '') + (r.cached?.length ? ' (cached)' : ''), false); }
-        } catch (ex) { status('✗ ' + ex.message, false); }
+        } catch (ex) { status('x ' + ex.message, false); }
         finally { e.target.disabled = false; }
       });
 
@@ -123,20 +123,20 @@ export async function renderAiSettings(m, root) {
         if (!v) return toast('API key?', 'error');
         try {
           await api(`/api/ai/${pid}/rotate-key`, { method: 'POST', body: { apiKey: v } });
-          toast('✓', 'success');
+          toast('ok', 'success');
           renderAiSettings(m, root);
         } catch (e) { toast(e.message, 'error'); }
       });
 
       $('.a-delkey', card).addEventListener('click', async () => {
-        try { await api(`/api/ai/${pid}/key`, { method: 'DELETE' }); toast('✓', 'success'); renderAiSettings(m, root); }
+        try { await api(`/api/ai/${pid}/key`, { method: 'DELETE' }); toast('ok', 'success'); renderAiSettings(m, root); }
         catch (e) { toast(e.message, 'error'); }
       });
 
       $('.a-activate', card).addEventListener('click', async () => {
         const model = models.value;
         if (!model) return toast('Model?', 'error');
-        try { await api('/api/ai/activate', { method: 'POST', body: { providerId: pid, modelId: model } }); toast('✓', 'success'); renderAiSettings(m, root); }
+        try { await api('/api/ai/activate', { method: 'POST', body: { providerId: pid, modelId: model } }); toast('ok', 'success'); renderAiSettings(m, root); }
         catch (e) { toast(e.message, 'error'); }
       });
 
@@ -144,8 +144,8 @@ export async function renderAiSettings(m, root) {
         e.target.disabled = true;
         try {
           const r = await api(`/api/ai/${pid}/test-model`, { method: 'POST', body: { modelId: models.value } });
-          status(r.ok ? `✓ ${r.latencyMs}ms — “${(r.reply || '').slice(0, 120)}”` : `✗ ${r.error}`, r.ok);
-        } catch (ex) { status('✗ ' + ex.message, false); }
+          status(r.ok ? `ok ${r.latencyMs}ms — “${(r.reply || '').slice(0, 120)}”` : `x ${r.error}`, r.ok);
+        } catch (ex) { status('x ' + ex.message, false); }
         finally { e.target.disabled = false; }
       });
 
@@ -174,12 +174,12 @@ export async function renderSystemSettings(m, root) {
           <div class="field"><label>${esc(t('sys.toolTimeout'))}</label><input class="input" id="l-to" type="number" min="10000" max="600000" step="1000"></div>
           <div class="field"><label>${esc(t('sys.scanTimeout'))}</label><input class="input" id="l-st" type="number" min="1" max="180"></div>
         </div>
-        <button class="btn primary" type="submit">${esc(t('sys.save'))}</button>
+        <button class="btn-tilt primary" type="submit">${esc(t('sys.save'))}</button>
       </form>
       <hr class="divider">
       <h3>${esc(t('sys.externalKeys'))}</h3>
       <div class="grid cols-3">
-        <div class="field"><label>${esc(t('sys.gsbKey'))}</label><input class="input" id="k-gsb" type="password" autocomplete="new-password" placeholder="AIza…"></div>
+        <div class="field"><label>${esc(t('sys.gsbKey'))}</label><input class="input" id="k-gsb" type="password" autocomplete="new-password" placeholder="AIza..."></div>
         <div class="field"><label>${esc(t('sys.sucuriKey'))}</label><input class="input" id="k-sucuri" type="password" autocomplete="new-password"></div>
         <div class="field"><label>${esc(t('sys.sucuriDomain'))}</label><input class="input" id="k-sdomain" placeholder="monitorx.sucuri.net"></div>
         <div class="field"><label>VirusTotal API key</label><input class="input" id="k-vt" type="password" autocomplete="new-password"></div>
@@ -208,7 +208,7 @@ export async function renderSystemSettings(m, root) {
           <div class="field"><label>Password</label><input class="input" id="db-pass" type="password" autocomplete="new-password"></div>
         </div>
         <label class="checkbox"><input type="checkbox" id="db-scope"> <span>${esc(t('sys.scopeOk'))}</span></label>
-        <button class="btn primary small" id="db-add">${esc(t('common.save'))}</button>
+        <button class="btn-tilt primary small" id="db-add">${esc(t('common.save'))}</button>
       </details>
     </div>
 
@@ -223,9 +223,9 @@ export async function renderSystemSettings(m, root) {
           <div class="field"><label>Base URL</label><input class="input" id="ac-url" placeholder="https://app.example.com"></div>
           <div class="field"><label>Username</label><input class="input" id="ac-user" autocomplete="off"></div>
           <div class="field"><label>Password</label><input class="input" id="ac-pass" type="password" autocomplete="new-password"></div>
-          <div class="field"><label>Extra headers (JSON)</label><input class="input" id="ac-headers" placeholder='{"x-api-key":"…"}'></div>
+          <div class="field"><label>Extra headers (JSON)</label><input class="input" id="ac-headers" placeholder='{"x-api-key":"..."}'></div>
         </div>
-        <button class="btn primary small" id="ac-add">${esc(t('common.save'))}</button>
+        <button class="btn-tilt primary small" id="ac-add">${esc(t('common.save'))}</button>
       </details>
     </div>`;
 
@@ -238,7 +238,7 @@ export async function renderSystemSettings(m, root) {
     $('#l-paths', root).value = sys.limits.maxProbePaths;
     $('#l-to', root).value = sys.limits.toolTimeoutMs;
     $('#l-st', root).value = sys.limits.scanTimeoutMin;
-    $('#k-state', root).textContent = `GSB: ${sys.externalKeys.gsb ? '✓' : '—'} · Sucuri: ${sys.externalKeys.sucuri ? '✓' : '—'} · ${sys.env.passwordConfigured ? 'pass✓' : 'pass—'} ${sys.env.sessionSecretConfigured ? 'sess✓' : 'sess—'} ${sys.env.encryptionKeyConfigured ? 'enc✓' : 'enc—'}`;
+    $('#k-state', root).textContent = `GSB: ${sys.externalKeys.gsb ? 'ok' : '—'} · Sucuri: ${sys.externalKeys.sucuri ? 'ok' : '—'} · ${sys.env.passwordConfigured ? 'passok' : 'pass—'} ${sys.env.sessionSecretConfigured ? 'sessok' : 'sess—'} ${sys.env.encryptionKeyConfigured ? 'encok' : 'enc—'}`;
   } catch (e) { toast(e.message, 'error'); }
 
   $('#lim-form', root).addEventListener('submit', async (e) => {
@@ -268,7 +268,7 @@ export async function renderSystemSettings(m, root) {
     try {
       await api('/api/tools/external-keys', { method: 'POST', body });
       $('#k-gsb', root).value = ''; $('#k-sucuri', root).value = ''; $('#k-vt', root).value=''; $('#k-us', root).value=''; $('#k-bw', root).value=''; $('#k-wz', root).value='';
-      toast('✓', 'success');
+      toast('ok', 'success');
     } catch (e) { toast(e.message, 'error'); }
   });
 
@@ -279,7 +279,7 @@ export async function renderSystemSettings(m, root) {
       $('#dbt-list', root).innerHTML = d.items.length ? `<div class="table-wrap" style="border:0"><table class="data">
         <thead><tr><th>Name</th><th>Type</th><th>Host:Port</th><th>Creds</th><th></th></tr></thead>
         <tbody>${d.items.map((x) => `<tr><td>${esc(x.name)}</td><td><span class="tag">${esc(x.db_type)}</span></td>
-          <td class="mono">${esc(x.host)}:${x.port}</td><td>${x.hasCredentials ? '🔑' : '—'}</td>
+          <td class="mono">${esc(x.host)}:${x.port}</td><td>${x.hasCredentials ? '' : '—'}</td>
           <td><button class="btn ghost small db-del" data-id="${esc(x.id)}">${esc(t('common.delete'))}</button></td></tr>`).join('')}</tbody></table></div>`
         : `<p class="muted">—</p>`;
       $$('.db-del', root).forEach((b) => b.addEventListener('click', async () => {
@@ -299,7 +299,7 @@ export async function renderSystemSettings(m, root) {
         secret: $('#db-pass', root).value || undefined,
         scopeConfirmed: true,
       }});
-      toast('✓', 'success'); $('#db-pass', root).value = ''; loadDb();
+      toast('ok', 'success'); $('#db-pass', root).value = ''; loadDb();
     } catch (e) { toast(e.message, 'error'); }
   });
   loadDb();
@@ -311,7 +311,7 @@ export async function renderSystemSettings(m, root) {
       $('#acc-list', root).innerHTML = d.items.length ? `<div class="table-wrap" style="border:0"><table class="data">
         <thead><tr><th>Label</th><th>Role</th><th>Base URL</th><th>Secret</th><th></th></tr></thead>
         <tbody>${d.items.map((x) => `<tr><td>${esc(x.label)}</td><td><span class="tag">${esc(x.role)}</span></td>
-          <td class="mono" style="font-size:12px">${esc(x.base_url)}</td><td>${x.hasSecret ? '🔑' : '—'}</td>
+          <td class="mono" style="font-size:12px">${esc(x.base_url)}</td><td>${x.hasSecret ? '' : '—'}</td>
           <td><button class="btn ghost small ac-del" data-id="${esc(x.id)}">${esc(t('common.delete'))}</button></td></tr>`).join('')}</tbody></table></div>`
         : `<p class="muted">—</p>`;
       $$('.ac-del', root).forEach((b) => b.addEventListener('click', async () => {
@@ -329,7 +329,7 @@ export async function renderSystemSettings(m, root) {
         secret: $('#ac-pass', root).value || undefined,
         headers: $('#ac-headers', root).value || '{}',
       }});
-      toast('✓', 'success'); $('#ac-pass', root).value = ''; loadAcc();
+      toast('ok', 'success'); $('#ac-pass', root).value = ''; loadAcc();
     } catch (e) { toast(e.message, 'error'); }
   });
   loadAcc();

@@ -19,14 +19,14 @@ export async function renderFindings(m, root) {
     <div id="fi-table"></div>
     <div class="toolbar" style="margin-top:14px">
       <span class="spacer"></span>
-      <button class="btn small" id="fi-prev">${esc(t('common.prev'))}</button>
+      <button class="btn-tilt small" id="fi-prev">${esc(t('common.prev'))}</button>
       <span class="inline-note" id="fi-page"></span>
-      <button class="btn small" id="fi-next">${esc(t('common.next'))}</button>
+      <button class="btn-tilt small" id="fi-next">${esc(t('common.next'))}</button>
     </div>`;
 
   const load = async () => {
     const data = await api(`/api/findings?page=${page}&pageSize=25&q=${encodeURIComponent(qStr)}&severity=${sevStr}&status=${statusStr}`);
-    $('#fi-count', root).textContent = `${data.total} ${t('common.of')} …`;
+    $('#fi-count', root).textContent = `${data.total} ${t('common.of')} ...`;
     $('#fi-page', root).textContent = `${t('common.page')} ${data.page}`;
     $('#fi-table', root).innerHTML = data.items.length ? `<div class="table-wrap"><table class="data">
       <thead><tr><th>Sev</th><th>Title</th><th>Asset</th><th>Scan</th><th>Tool</th><th>Status</th><th>Seen</th></tr></thead>

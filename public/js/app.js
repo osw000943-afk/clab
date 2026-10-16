@@ -66,13 +66,13 @@ export function confirmDialog(message, onYes) {
 }
 
 export function sevBadge(sev) {
-  return `<span class="badge ${esc(sev)}"><i style="width:7px;height:7px;border-radius:2px;background:currentColor;display:inline-block"></i>${esc(sev)}</span>`;
+  return `<span class="badge ${esc(sev)}">${esc(sev)}</span>`;
 }
 export function statusBadge(st) {
   return `<span class="badge ${esc(st)}">${esc(st)}</span>`;
 }
 export function emptyState(msg, hint) {
-  return `<div class="empty"><div class="ico">◇</div><p><b>${esc(msg)}</b></p>${hint ? `<p>${esc(hint)}</p>` : ''}</div>`;
+  return `<div class="empty"><div class="ico"></div><p><b>${esc(msg)}</b></p>${hint ? `<p>${esc(hint)}</p>` : ''}</div>`;
 }
 export { t };
 
@@ -221,7 +221,7 @@ async function route() {
         const cleanup = await r.view(m, content);
         if (typeof cleanup === 'function') cleanupCurrent = cleanup;
       } catch (e) {
-        content.innerHTML = `<div class="empty"><div class="ico">⚠</div><p>${esc(t('common.error') + e.message)}</p>
+        content.innerHTML = `<div class="empty"><div class="ico"></div><p>${esc(t('common.error') + e.message)}</p>
           <p><a href="#/dashboard">${esc(t('nav.dashboard'))}</a></p></div>`;
       }
       return;
