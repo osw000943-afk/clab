@@ -8,7 +8,7 @@ r.get('/', (req, res) => {
   const statuses = getToolStatuses();
   res.json(TOOLS.map((t) => ({
     id: t.id, name: t.name, category: t.category, mode: t.mode, license: t.license,
-    heavy: !!t.heavy, manual: !!t.manual, builtin: !!t.builtin, stages: t.stages, desc: t.desc,
+    heavy: !!t.heavy, manual: !!t.manual, builtin: !!t.builtin, stages: t.stages, desc: t.desc, installHint: t.installHint || null,
     needsOptIn: !!t.needsOptIn,
     status: statuses[t.id]?.status || 'missing',
     version: statuses[t.id]?.version || null,
