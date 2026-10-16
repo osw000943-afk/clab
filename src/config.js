@@ -5,7 +5,11 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-/** Minimal .env loader (no dependency). Existing env vars win. */
+/** Minimal .env loader. Existing shell env vars win for secrets ONLY when they
+ * look like a real scrypt hash. A stale/invalid shell export (e.g.
+ * LAB_PASSWORD_HASH=testserver) must never shadow the real hash in .env. */
+const SECRET_KEYS = new Set(['LAB_PASSWORD_HASH', 'SESSION_SECRET', 'ENCRYPTION_KEY']);
+function looksLikeScryptHash(v) { return typeof v === 'string' && v.startsWith('scrypt$'); }
 function loadEnvFile(file) {
   if (!fs.existsSync(file)) return;
   const txt = fs.readFileSync(file, 'utf8');
@@ -19,7 +23,12 @@ function loadEnvFile(file) {
     if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
       val = val.slice(1, -1);
     }
-    if (!(key in process.env)) process.env[key] = val;
+    if (SECRET_KEYS.has(key) && !looksLikeScryptHash(process.env[key])) {
+      // shell value is missing or invalid -> load real secret from file
+      if (val) process.env[key] = val;
+    } else if (!(key in process.env)) {
+      process.env[key] = val;
+    }
   }
 }
 
